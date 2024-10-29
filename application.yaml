@@ -1,0 +1,14 @@
+spring:
+   datasource:
+      username: turtles
+      password: turtles
+      url: jdbc:mysql://localhost:3306/turtles
+   
+   jpa:
+      hibernate:
+         ddl-auto: update
+      show-sql: true
+      
+  
+    
+   
