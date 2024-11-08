@@ -29,21 +29,22 @@ public class TurtlesController {
 	@Autowired
 	private TurtlesService turtlesService;
 
-	@PostMapping("/{categoryId}/species")
+	@PostMapping("/category/{categoryId}/species")
 	@ResponseStatus(code = HttpStatus.CREATED)
 	public SpeciesData createSpecies(@PathVariable Long categoryId, @RequestBody SpeciesData speciesData) {
-		log.info("Creating species {}", speciesData);
-		return turtlesService.saveSpecies(speciesData);
+		log.info("Creating species {} with category ID={}", speciesData, categoryId);
+		return turtlesService.saveSpecies(speciesData, categoryId);
 	}
 
-	@PutMapping("/{speciesId}")
-	public SpeciesData updateSpecies(@PathVariable Long speciesId, @RequestBody SpeciesData speciesData) {
+	@PutMapping("/category/{categoryId}/species/{speciesId}")
+	public SpeciesData updateSpecies(@PathVariable Long speciesId, @PathVariable Long categoryId,
+			@RequestBody SpeciesData speciesData) {
 		speciesData.setSpeciesId(speciesId);
-		log.info("Updating species {}", speciesData);
-		return turtlesService.saveSpecies(speciesData);
+		log.info("Updating species {} with category ID={}", speciesData, categoryId);
+		return turtlesService.saveSpecies(speciesData, categoryId);
 	}
 
-	@GetMapping
+	@GetMapping("/species")
 	public List<SpeciesData> retrieveAllSpecies() {
 
 		log.info("Retrieving all species.");
@@ -51,7 +52,16 @@ public class TurtlesController {
 		return turtlesService.retrieveAllSpecies();
 	}
 
-	@GetMapping("/{speciesId}")
+	//Retrieves all species of a taxonomic family
+	@GetMapping("/category/{categoryId}/species")
+	public List<SpeciesData> retrieveAllSpeciesByCategory() {
+
+		log.info("Retrieving all species.");
+
+		return turtlesService.retrieveAllSpecies();
+	}
+
+	@GetMapping("/species/{speciesId}")		
 	public SpeciesData retrieveASpeciesById(@PathVariable Long speciesId) {
 
 		log.info("Retrieving a species with ID={}", speciesId);
@@ -59,7 +69,7 @@ public class TurtlesController {
 		return turtlesService.retrieveASpeciesById(speciesId);
 	}
 
-	@DeleteMapping("/{speciesId}")
+	@DeleteMapping("/species/{speciesId}")
 	public Map<String, String> deleteSpeciesById(@PathVariable Long speciesId) {
 
 		log.info("Deleting a species with ID={}", speciesId);
@@ -69,22 +79,50 @@ public class TurtlesController {
 		return Map.of("message", "Species with the ID=" + speciesId + " has been deleted.");
 	}
 
-	@PostMapping("/{speciesId}/category")
+	@PostMapping("/category")
 	@ResponseStatus(code = HttpStatus.CREATED)
-	public CategoryData addCategoryToSpecies(@PathVariable Long speciesId, @RequestBody CategoryData categoryData) {
+	public CategoryData addCategory(@RequestBody CategoryData categoryData) {
 
-		log.info("Adding a category {} with ID={}", categoryData, speciesId);
+		log.info("Adding a category {}", categoryData);
 
-		return turtlesService.saveCategory(speciesId, categoryData);
+		return turtlesService.saveCategory(categoryData);
 	}
 
-	@PostMapping("/{speciesId}/location")
+	//Retrieves all taxonomic families of turtles 
+	@GetMapping("/category")
+	public List<CategoryData> retrieveAllCategories() {
+
+		log.info("Retrieving all categories.");
+
+		return turtlesService.retrieveAllCategories();
+	}
+
+	@PostMapping("/species/{speciesId}/category/{categoryId}/location")
 	@ResponseStatus(code = HttpStatus.CREATED)
+	public LocationData addLocation(@PathVariable Long speciesId, @PathVariable Long categoryId,
+			@RequestBody LocationData locationData) {
 
-	public LocationData addLocation(@PathVariable Long speciesId, @RequestBody LocationData locationData) {
+		log.info("Adding a location {} for species with ID={} and category with ID={}", locationData, speciesId,
+				categoryId);
 
-		log.info("Adding a location {} with ID={}", locationData, speciesId);
+		return turtlesService.saveLocation(speciesId, categoryId, locationData);
+	}
 
-		return turtlesService.saveLocation(speciesId, locationData);
+	@DeleteMapping("/location/{locationId}")
+	public Map<String, String> deleteLocation(@PathVariable Long locationId) {
+
+		log.info("Deleting a location with ID={}", locationId);
+
+		turtlesService.deleteLocation(locationId);
+
+		return Map.of("message", "Location with the ID=" + locationId + " has been deleted.");
+	}
+
+	@PutMapping("/species/{speciesId}/category/{categoryId}/location/{locationId}")
+	public LocationData updateLocation(@PathVariable Long speciesId, @PathVariable Long categoryId,
+			@PathVariable Long locationId, @RequestBody LocationData locationData) {
+		locationData.setLocationId(locationId);
+		log.info("Updating location {} with ID={}", locationData, locationId);
+		return turtlesService.saveLocation(categoryId, locationId, locationData);
 	}
 }

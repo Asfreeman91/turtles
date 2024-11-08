@@ -23,18 +23,18 @@ public class Category {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long categoryId;
-	
-	private String name;
-	
+
+	@EqualsAndHashCode.Exclude
+	private String familyName;
+
 	@ManyToMany(cascade = CascadeType.PERSIST)
 	@EqualsAndHashCode.Exclude
 	@ToString.Exclude
-	@JoinTable(
-			name = "location_category",
-			joinColumns = @JoinColumn (name = "category_id"),
-			inverseJoinColumns = @JoinColumn(name = "location_id"))
+	@JoinTable(name = "location_category", 
+	joinColumns = @JoinColumn(name = "category_id"), 
+	inverseJoinColumns = @JoinColumn(name = "location_id"))
 	private Set<Location> locations = new HashSet<>();
-	
+
 	@EqualsAndHashCode.Exclude
 	@ToString.Exclude
 	@OneToMany(mappedBy = "category", orphanRemoval = true, cascade = CascadeType.ALL)

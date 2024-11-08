@@ -3,6 +3,7 @@ package turtles.entity;
 import java.util.HashSet;
 import java.util.Set;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -19,14 +20,14 @@ public class Location {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long locationId;
-	
+
 	private String country;
-	
+
 	@EqualsAndHashCode.Exclude
 	@ToString.Exclude
-	@ManyToMany(mappedBy = "locations")
+	@ManyToMany(mappedBy = "locations", cascade = CascadeType.PERSIST)
 	private Set<Species> species = new HashSet<>();
-	
+
 	@EqualsAndHashCode.Exclude
 	@ToString.Exclude
 	@ManyToMany(mappedBy = "locations")

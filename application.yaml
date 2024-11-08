@@ -6,9 +6,12 @@ spring:
    
    jpa:
       hibernate:
-         ddl-auto: update
+         ddl-auto: none
       show-sql: true
-      
-  
+      defer-database-initialization: = true
+   sql:
+      init:
+         mode: never
+        
     
    

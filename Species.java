@@ -19,33 +19,29 @@ import lombok.ToString;
 @Entity
 @Data
 public class Species {
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long speciesId;
-	
-	
+
+	@EqualsAndHashCode.Exclude
 	private String name;
-	
-	
+
+	@EqualsAndHashCode.Exclude
 	private String characteristics;
-	
+
 	@EqualsAndHashCode.Exclude
 	@ToString.Exclude
-	@ManyToOne(cascade = CascadeType.ALL)
-	@JoinColumn (name = "category_id", nullable = false)
+	@ManyToOne(cascade = CascadeType.PERSIST)
+	@JoinColumn(name = "category_id", nullable = false)
 	private Category category;
-	
+
 	@EqualsAndHashCode.Exclude
 	@ToString.Exclude
 	@ManyToMany(cascade = CascadeType.PERSIST)
-	@JoinTable(
-			name = "species_location",
-			joinColumns = @JoinColumn (name = "species_id"),
-			inverseJoinColumns = @JoinColumn(name = "location_id"))
+	@JoinTable(name = "species_location", 
+	joinColumns = @JoinColumn(name = "species_id"), 
+	inverseJoinColumns = @JoinColumn(name = "location_id"))
 	private Set<Location> locations = new HashSet<>();
-	
-	
-	
 
 }

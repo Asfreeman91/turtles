@@ -17,13 +17,11 @@ public class SpeciesData {
 	private String name;
 	private String characteristics;
 	private Set<LocationData> locations = new HashSet<>();
-	private Category category;
 
 	public SpeciesData(Species species) {
-		this.speciesId = species.getSpeciesId();
-		this.name = species.getName();
-		this.characteristics = species.getCharacteristics();
-		this.category = species.getCategory();
+		speciesId = species.getSpeciesId();
+		name = species.getName();
+		characteristics = species.getCharacteristics();
 
 		for (Location location : species.getLocations()) {
 			this.locations.add(new LocationData(location));
@@ -35,7 +33,6 @@ public class SpeciesData {
 		this.speciesId = speciesId;
 		this.name = name;
 		this.characteristics = characteristics;
-
 	}
 
 	public Species toSpecies() {
@@ -57,7 +54,6 @@ public class SpeciesData {
 	public static class LocationData {
 		private Long locationId;
 		private String country;
-		private Set<CategoryData> categories = new HashSet<>();
 
 		public LocationData(Location location) {
 			this.locationId = location.getLocationId();
@@ -71,32 +67,29 @@ public class SpeciesData {
 			location.setLocationId(locationId);
 			location.setCountry(country);
 
-			for (CategoryData categoryData : categories) {
-				location.getCategories().add(categoryData.toCategory());
-			}
-
 			return location;
+
 		}
+
 	}
 
 	@Data
 	@NoArgsConstructor
 	public static class CategoryData {
 		private Long categoryId;
-		private String name;
+		private String familyName;
+		private Set<LocationData> locations = new HashSet<>();
 		private Set<SpeciesData> species = new HashSet<>();
-		private Set<LocationData> location = new HashSet<>();
 
 		public CategoryData(Category category) {
 			this.categoryId = category.getCategoryId();
-			this.name = category.getName();
-
-			for (Species species : category.getSpecies()) {
-				this.species.add(new SpeciesData(species));
-			}
+			this.familyName = category.getFamilyName();
 
 			for (Location location : category.getLocations()) {
-				this.location.add(new LocationData(location));
+				locations.add(new LocationData(location));
+			}
+			for (Species specimen : category.getSpecies()) {
+				species.add(new SpeciesData(specimen));
 			}
 		}
 
@@ -104,11 +97,11 @@ public class SpeciesData {
 			Category category = new Category();
 
 			category.setCategoryId(categoryId);
-			category.setName(name);
+			category.setFamilyName(familyName);
 
 			return category;
-
 		}
+
 	}
 
 }

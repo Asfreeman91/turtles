@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
 import turtles.controller.model.SpeciesData;
 import turtles.controller.model.SpeciesData.CategoryData;
 import turtles.controller.model.SpeciesData.LocationData;
@@ -34,10 +33,32 @@ public class TurtlesService {
 
 	@Transactional(readOnly = false)
 	public SpeciesData saveSpecies(SpeciesData speciesData, Long categoryId) {
-		Species species = speciesData.toSpecies();
-		Species dbSpecies = speciesDao.save(species);
+		Category category = findCategoryById(categoryId);
 
+		Species species = findOrCreateSpecies(speciesData.getSpeciesId());
+		setFieldsInSpecies(species, speciesData);
+
+		species.setCategory(category);
+		category.getSpecies().add(species);
+
+		Species dbSpecies = speciesDao.save(species);
 		return new SpeciesData(dbSpecies);
+	}
+
+	private void setFieldsInSpecies(Species species, SpeciesData speciesData) {
+		species.setName(speciesData.getName());
+		species.setCharacteristics(speciesData.getCharacteristics());
+	}
+
+	private Species findOrCreateSpecies(Long speciesId) {
+		Species species;
+
+		if (Objects.isNull(speciesId)) {
+			species = new Species();
+		} else {
+			species = findSpeciesById(speciesId);
+		}
+		return species;
 	}
 
 	@Transactional(readOnly = true)
@@ -49,9 +70,8 @@ public class TurtlesService {
 		for (Species species : speciesList) {
 			SpeciesData speciesData = new SpeciesData(species);
 
-			speciesData.getCategory();
-			speciesData.setCategory(null);
-			speciesData.getLocations().clear();
+			speciesData.getCharacteristics();
+			speciesData.getLocations();
 
 			result.add(speciesData);
 		}
@@ -76,102 +96,97 @@ public class TurtlesService {
 	}
 
 	@Transactional(readOnly = false)
-	public CategoryData saveCategory(Long speciesId, CategoryData categoryData) {
-		
-		Species species = findSpeciesById(speciesId);
+	public CategoryData saveCategory(CategoryData categoryData) {
+
 		Long categoryId = categoryData.getCategoryId();
-		Category speciesCategory = findOrCreateCategory(speciesId, categoryId);
+		Category speciesCategory = findOrCreateCategory(categoryId, categoryData.getFamilyName());
 
-		copyCategoryFields(speciesCategory, categoryData);
+		setFieldsInCategory(speciesCategory, categoryData);
 
-		speciesCategory.getSpecies().add(species);
-		species.setCategory(speciesCategory);
-		Category dbCategory = categoryDao.save(speciesCategory);
-		return new CategoryData(dbCategory);
+		return new CategoryData(categoryDao.save(speciesCategory));
 
 	}
 
-	private void copyCategoryFields(Category speciesCategory, CategoryData categoryData) {
-		speciesCategory.setCategoryId(categoryData.getCategoryId());
-		speciesCategory.setName(categoryData.getName());
-
-	}
-
-	private Category findOrCreateCategory(Long speciesId, Long categoryId) {
+	private Category findOrCreateCategory(Long categoryId, String familyName) {
+		Category category;
 
 		if (Objects.isNull(categoryId)) {
-			return new Category();
-
-		}
-
-		return findCategoryById(speciesId, categoryId);
-	}
-
-	private Category findCategoryById(Long speciesId, Long categoryId) {
-		Category category = categoryDao.findById(categoryId)
-				.orElseThrow(() -> new NoSuchElementException("Category with ID=" + categoryId + " was not found."));
-
-		boolean found = false;
-
-		for (Species species : category.getSpecies()) {
-			if (species.getSpeciesId() == speciesId) {
-				found = true;
-				break;
-			}
-		}
-		if (!found) {
-			throw new IllegalArgumentException(
-					"The category with ID=" + categoryId + " is not associated with the species with ID=" + speciesId);
+			category = new Category();
+		} else {
+			category = findCategoryById(categoryId);
 		}
 		return category;
 	}
 
-	public LocationData saveLocation(Long speciesId, LocationData locationData, Long categoryId) {
+	private Category findCategoryById(Long categoryId) {
+		return categoryDao.findById(categoryId)
+				.orElseThrow(() -> new NoSuchElementException("Category with ID=" + categoryId + "was not found."));
+	}
+
+	private void setFieldsInCategory(Category speciesCategory, CategoryData categoryData) {
+		speciesCategory.setFamilyName(categoryData.getFamilyName());
+
+	}
+
+	@Transactional(readOnly = false)
+	public LocationData saveLocation(Long speciesId, Long categoryId, LocationData locationData) {
+
 		Species species = findSpeciesById(speciesId);
-		Long locationId = locationData.getLocationId();
-		Location location = findOrCreateLocation(speciesId, locationId);
+		Category category = findCategoryById(categoryId);
+		Location location = findOrCreateLocation(locationData.getLocationId());
 
-		copyLocationFields(location, locationData);
-
-		location.getSpecies().add(species);
+		setFieldsInLocation(location, locationData, species, category);
 		species.getLocations().add(location);
+		category.getLocations().add(location);
 
-		Location dbLocation = locationDao.save(location);
-		return new LocationData(dbLocation);
+		return new LocationData(locationDao.save(location));
 	}
 
-	private void copyLocationFields(Location location, LocationData locationData) {
-		location.setLocationId(location.getLocationId());
-		location.setCountry(location.getCountry());
+	private void setFieldsInLocation(Location location, LocationData locationData, Species species, Category category) {
+		location.setCountry(locationData.getCountry());
 
 	}
 
-	private Location findOrCreateLocation(Long speciesId, Long locationId) {
+	private Location findOrCreateLocation(Long locationId) {
+		Location location;
+
 		if (Objects.isNull(locationId)) {
-			return new Location();
-
+			location = new Location();
+		} else {
+			location = findLocationById(locationId);
 		}
 
-		return findLocationById(speciesId, locationId);
+		return location;
 	}
 
-	private Location findLocationById(Long speciesId, Long locationId) {
-		Location location = locationDao.findById(locationId)
+	private Location findLocationById(Long locationId) {
+		return locationDao.findById(locationId)
 				.orElseThrow(() -> new NoSuchElementException("Location with ID=" + locationId + " was not found."));
+	}
 
-		boolean found = false;
+	@Transactional(readOnly = false)
+	public void deleteLocation(Long locationId) {
+		Location location = findLocationById(locationId);
+		locationDao.delete(location);
 
-		for (Species species : location.getSpecies()) {
-			if (species.getSpeciesId() == speciesId) {
-				found = true;
-				break;
-			}
+	}
+
+	@Transactional(readOnly = true)
+	public List<CategoryData> retrieveAllCategories() {
+		List<Category> categories = categoryDao.findAll();
+
+		List<CategoryData> result = new LinkedList<>();
+
+		for (Category category : categories) {
+			CategoryData categoryData = new CategoryData(category);
+
+			categoryData.getSpecies().clear();
+
+			categoryData.getFamilyName();
+
+			result.add(categoryData);
 		}
-		if (!found) {
-			throw new IllegalArgumentException(
-					"The location with ID=" + locationId + " is not associated with the species with ID=" + speciesId);
-		}
-		return location;
+		return result;
 	}
 
 }
