@@ -1,1 +1,1 @@
-# turtles
+This REST API is a project that I'm currently working on. It is a database of turtle species from around the world. The database includes turtle taxonomic family names, names of different species, characteristics, and locations. It utilizes Eclipse, DBeaver, Java, and SpringBoot. 
